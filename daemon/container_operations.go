@@ -74,9 +74,6 @@ func buildSandboxOptions(cfg *config.Config, ctr *container.Container) ([]libnet
 
 	for _, extraHost := range ctr.HostConfig.ExtraHosts {
 		// allow IPv6 addresses in extra hosts; only split on first ":"
-		if _, err := opts.ValidateExtraHost(extraHost); err != nil {
-			return nil, err
-		}
 		host, ip, _ := strings.Cut(extraHost, ":")
 		// If the IP Address is the literal string "host-gateway", replace this
 		// value with the IP address(es) stored in the daemon level HostGatewayIP
