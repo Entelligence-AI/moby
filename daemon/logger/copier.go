@@ -45,7 +45,6 @@ func NewCopier(srcs map[string]io.Reader, dst Logger) *Copier {
 // Run starts logs copying
 func (c *Copier) Run() {
 	for src, w := range c.srcs {
-		c.copyJobs.Add(1)
 		go c.copySrc(src, w)
 	}
 }
@@ -125,9 +124,7 @@ func (c *Copier) copySrc(name string, src io.Reader) {
 						msg.Timestamp = partialTS
 					}
 
-					if logErr := c.dst.Log(msg); logErr != nil {
-						logDriverError(c.dst.Name(), string(msg.Line), logErr)
-					}
+					c.dst.Log(msg)
 				}
 				p += q + 1
 			}
@@ -157,9 +154,7 @@ func (c *Copier) copySrc(name string, src io.Reader) {
 					ordinal++
 					hasMorePartial = true
 
-					if logErr := c.dst.Log(msg); logErr != nil {
-						logDriverError(c.dst.Name(), string(msg.Line), logErr)
-					}
+					c.dst.Log(msg)
 					p = 0
 					n = 0
 				}
@@ -184,7 +179,5 @@ func (c *Copier) Wait() {
 
 // Close closes the copier
 func (c *Copier) Close() {
-	c.closeOnce.Do(func() {
-		close(c.closed)
-	})
+	close(c.closed)
 }
