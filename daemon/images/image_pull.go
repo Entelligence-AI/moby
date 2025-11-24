@@ -85,7 +85,6 @@ func (i *ImageService) pullImageWithReference(ctx context.Context, ref reference
 	if err != nil {
 		return err
 	}
-	defer done(ctx)
 
 	cs := &contentStoreForPull{
 		ContentStore: i.content,
@@ -114,16 +113,13 @@ func (i *ImageService) pullImageWithReference(ctx context.Context, ref reference
 
 	err = distribution.Pull(ctx, ref, imagePullConfig, cs)
 	close(progressChan)
+	done(ctx)
 	<-writesDone
 	return err
 }
 
 func tempLease(ctx context.Context, mgr leases.Manager) (context.Context, func(context.Context) error, error) {
 	nop := func(context.Context) error { return nil }
-	_, ok := leases.FromContext(ctx)
-	if ok {
-		return ctx, nop, nil
-	}
 
 	// Use an expiration that ensures the lease is cleaned up at some point if there is a crash, SIGKILL, etc.
 	opts := []leases.Opt{
