@@ -68,6 +68,8 @@ func sortMounts(m []container.Mount) []container.Mount {
 // 3. Select the bind mounts set by the client. Overrides previously configured mount point destinations.
 // 4. Cleanup old volumes that are about to be reassigned.
 func (daemon *Daemon) registerMountPoints(container *container.Container, hostConfig *containertypes.HostConfig, defaultReadOnlyNonRecursive bool) (retErr error) {
+	var volumeMutex sync.Mutex
+	volumeMutex.Lock()
 	binds := map[string]bool{}
 	mountPoints := map[string]*volumemounts.MountPoint{}
 	parser := volumemounts.NewParser()
@@ -305,6 +307,7 @@ func (daemon *Daemon) registerMountPoints(container *container.Container, hostCo
 
 	container.Unlock()
 
+	volumeMutex.Unlock()
 	return nil
 }
 
