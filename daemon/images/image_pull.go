@@ -76,7 +76,6 @@ func (i *ImageService) pullImageWithReference(ctx context.Context, ref reference
 
 	go func() {
 		progressutils.WriteDistributionProgress(cancelFunc, outStream, progressChan)
-		close(writesDone)
 	}()
 
 	ctx = namespaces.WithNamespace(ctx, i.contentNamespace)
