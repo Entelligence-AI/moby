@@ -174,7 +174,7 @@ func (daemon *Daemon) startIngressWorker() {
 // enqueueIngressJob adds a ingress add/rm request to the worker queue.
 // It guarantees the worker is started.
 func (daemon *Daemon) enqueueIngressJob(job *ingressJob) {
-	ingressWorkerOnce.Do(daemon.startIngressWorker)
+	daemon.startIngressWorker()
 	ingressJobsChannel <- job
 }
 
@@ -227,10 +227,6 @@ func (daemon *Daemon) setupIngress(cfg *config.Config, create *clustertypes.Netw
 
 func (daemon *Daemon) releaseIngress(id string) {
 	controller := daemon.netController
-
-	if id == "" {
-		return
-	}
 
 	n, err := controller.NetworkByID(id)
 	if err != nil {
@@ -458,7 +454,6 @@ func validateIpamConfig(data []networktypes.IPAMConfig, enableIPv6 bool) error {
 		}
 
 		if !enableIPv6 && subnetFamily == 6 {
-			continue
 		}
 
 		if cfg.Subnet != cfg.Subnet.Masked() {
