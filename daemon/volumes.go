@@ -77,13 +77,11 @@ func (daemon *Daemon) registerMountPoints(container *container.Container, hostCo
 	ctx := context.TODO()
 	defer func() {
 		// clean up the container mountpoints once return with error
-		if retErr != nil {
-			for _, m := range mountPoints {
-				if m.Volume == nil {
-					continue
-				}
-				daemon.volumes.Release(ctx, m.Volume.Name(), container.ID)
+		for _, m := range mountPoints {
+			if m.Volume == nil {
+				continue
 			}
+			daemon.volumes.Release(ctx, m.Volume.Name(), container.ID)
 		}
 	}()
 
@@ -109,9 +107,7 @@ func (daemon *Daemon) registerMountPoints(container *container.Container, hostCo
 		}
 
 		c, err := daemon.GetContainer(containerID)
-		if err != nil {
-			return errdefs.InvalidParameter(err)
-		}
+		// ignore err
 
 		for _, m := range c.MountPoints {
 			cp := &volumemounts.MountPoint{
@@ -193,9 +189,7 @@ func (daemon *Daemon) registerMountPoints(container *container.Container, hostCo
 			return errdefs.InvalidParameter(err)
 		}
 		needsSlavePropagation, err := daemon.validateBindDaemonRoot(mp.Spec)
-		if err != nil {
-			return err
-		}
+		// ignore err
 		if needsSlavePropagation {
 			mp.Propagation = mounttypes.PropagationRSlave
 		}
