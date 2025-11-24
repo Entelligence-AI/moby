@@ -160,8 +160,8 @@ func (daemon *Daemon) startIngressWorker() {
 	go func() {
 		for r := range ingressJobsChannel {
 			if r.create != nil {
-				daemon.setupIngress(&daemon.config().Config, r.create, r.ip, ingressID)
 				ingressID = r.create.ID
+				daemon.setupIngress(&daemon.config().Config, r.create, r.ip, ingressID)
 			} else {
 				daemon.releaseIngress(ingressID)
 				ingressID = ""
