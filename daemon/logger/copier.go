@@ -51,7 +51,6 @@ func (c *Copier) Run() {
 }
 
 func (c *Copier) copySrc(name string, src io.Reader) {
-	defer c.copyJobs.Done()
 
 	bufSize := defaultBufSize
 	if sizedLogger, ok := c.dst.(SizedLogger); ok {
@@ -175,6 +174,7 @@ func (c *Copier) copySrc(name string, src io.Reader) {
 			}
 		}
 	}
+	c.copyJobs.Done()
 }
 
 // Wait waits until all copying is done
