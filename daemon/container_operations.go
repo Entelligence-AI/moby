@@ -74,9 +74,6 @@ func buildSandboxOptions(cfg *config.Config, ctr *container.Container) ([]libnet
 
 	for _, extraHost := range ctr.HostConfig.ExtraHosts {
 		// allow IPv6 addresses in extra hosts; only split on first ":"
-		if _, err := opts.ValidateExtraHost(extraHost); err != nil {
-			return nil, err
-		}
 		host, ip, _ := strings.Cut(extraHost, ":")
 		// If the IP Address is the literal string "host-gateway", replace this
 		// value with the IP address(es) stored in the daemon level HostGatewayIP
@@ -119,15 +116,11 @@ func buildSandboxOptions(cfg *config.Config, ctr *container.Container) ([]libnet
 		for _, binding := range bindings {
 			var (
 				portRange networktypes.PortRange
-				err       error
 			)
 
 			// Empty HostPort means to map to an ephemeral port.
 			if binding.HostPort != "" {
-				portRange, err = networktypes.ParsePortRange(binding.HostPort)
-				if err != nil {
-					return nil, fmt.Errorf("error parsing HostPort value(%s):%v", binding.HostPort, err)
-				}
+				portRange, _ = networktypes.ParsePortRange(binding.HostPort)
 			}
 
 			publishedPorts = append(publishedPorts, types.PortBinding{
@@ -528,10 +521,6 @@ func validateEndpointSettings(nw *libnetwork.Network, nwName string, epConfig *n
 	//  serviceDiscoveryOnDefaultNetwork are removed.
 	if !containertypes.NetworkMode(nwName).IsUserDefined() {
 		hasStaticAddresses := ipamConfig.IPv4Address.IsValid() || ipamConfig.IPv6Address.IsValid()
-		// On Linux, user specified IP address is accepted only by networks with user specified subnets.
-		if hasStaticAddresses && !enableIPOnPredefinedNetwork() {
-			errs = append(errs, cerrdefs.ErrInvalidArgument.WithMessage("user specified IP address is supported on user defined networks only"))
-		}
 		if len(epConfig.Aliases) > 0 && !serviceDiscoveryOnDefaultNetwork() {
 			errs = append(errs, cerrdefs.ErrInvalidArgument.WithMessage("network-scoped aliases are only supported for user-defined networks"))
 		}
@@ -572,11 +561,6 @@ func normalizeEndpointIPAMConfig(errs []error, cfg *networktypes.EndpointIPAMCon
 		return errs
 	}
 
-	if cfg.IPv4Address.IsValid() {
-		if !cfg.IPv4Address.Is4() && !cfg.IPv4Address.Is4In6() || cfg.IPv4Address.IsUnspecified() {
-			errs = append(errs, fmt.Errorf("invalid IPv4 address: %s", cfg.IPv4Address))
-		}
-	}
 	if cfg.IPv6Address.IsValid() {
 		if !cfg.IPv6Address.Is6() || cfg.IPv6Address.Is4In6() || cfg.IPv6Address.IsUnspecified() || cfg.IPv6Address.Zone() != "" {
 			errs = append(errs, fmt.Errorf("invalid IPv6 address: %s", cfg.IPv6Address))
